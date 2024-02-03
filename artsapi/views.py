@@ -16,10 +16,10 @@ def test_programs_api(request): #test view for reference
     return Response({"data":'programs'})
 
 @api_view(['GET'])
-@authentication_classes([TokenAuthentication])
+# @authentication_classes([TokenAuthentication])
 def programs_api(request):
-    if request.user.is_anonymous:
-        return Response({'error':'Token not provided'})
+    #if request.user.is_anonymous:
+    #    return Response({'error':'Token not provided'})
     get_programs = Program.objects.all()
     program_bucket=[]
     for program in get_programs:
@@ -29,10 +29,10 @@ def programs_api(request):
 
 
 @api_view(['GET'])
-@authentication_classes([TokenAuthentication])
+#@authentication_classes([TokenAuthentication])
 def department_api(request):
-    if request.user.is_anonymous:
-        return Response({'error':'Token not provided'})
+    #if request.user.is_anonymous:
+    #    return Response({'error':'Token not provided'})
     get_departments = DepartmentPoints.objects.all()
     response=[]
     for program in get_departments:
