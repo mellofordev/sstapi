@@ -1,9 +1,12 @@
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view,authentication_classes
 from rest_framework.response import Response
 from django.contrib.auth.models import User
 from rest_framework.authtoken.models import Token
+from rest_framework.authentication import TokenAuthentication
 from django.shortcuts import redirect
 from django.core.exceptions import ObjectDoesNotExist
+from .models import Profile
+
 # Create your views here.
 @api_view(['GET','POST'])
 def signup_view(request):
@@ -46,6 +49,20 @@ def signup_view(request):
 def client_signup(request):
     return redirect('http://localhost:8501')
 @api_view(['GET'])
-def client_isLoggedIn(request=None,token="",isLoggedIn=False):
-    
-    return Response({"isLoggedIn":isLoggedIn,"token":token})
+def client_isLoggedIn(request,slug):
+    try:
+        get_user = User.objects.get(username=slug)
+        token,obj=Token.objects.get_or_create(user=get_user)
+    except ObjectDoesNotExist:
+        return Response({"token":"user does not exist"})
+    return Response({"token":token.key})
+
+# @api_view(['GET'])
+# @authentication_classes(TokenAuthentication)
+# def profile_api(request):
+#     get_user=request.user
+#     if get_user.is_anonymous:
+#         return Response({"error":'Token not provided '})
+#     try:
+#         profile = Profile.objects.get(user=get_user)
+#         serializer= ProfileSerializer(profile)
