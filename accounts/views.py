@@ -6,9 +6,9 @@ from rest_framework.authentication import TokenAuthentication
 from django.shortcuts import redirect
 from django.core.exceptions import ObjectDoesNotExist
 from .models import Profile
-
+from .serializers import ProfileSerializer
 # Create your views here.
-@api_view(['GET','POST'])
+@api_view(['POST'])
 def signup_view(request):
     if request.method=='POST':
         response={}
@@ -57,12 +57,15 @@ def client_isLoggedIn(request,slug):
         return Response({"token":"user does not exist"})
     return Response({"token":token.key})
 
-# @api_view(['GET'])
-# @authentication_classes(TokenAuthentication)
-# def profile_api(request):
-#     get_user=request.user
-#     if get_user.is_anonymous:
-#         return Response({"error":'Token not provided '})
-#     try:
-#         profile = Profile.objects.get(user=get_user)
-#         serializer= ProfileSerializer(profile)
+@api_view(['GET'])
+@authentication_classes([TokenAuthentication])
+def profile_api(request):
+    get_user=request.user
+    if get_user.is_anonymous:
+        return Response({"error":'Token not provided '})
+    try:
+        profile = Profile.objects.get(user=get_user)
+        serializer= ProfileSerializer(profile)
+    except ObjectDoesNotExist:
+        return Response({"error":"Token not provided"})
+    return Response({"data":serializer.data})
