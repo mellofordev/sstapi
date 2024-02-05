@@ -47,14 +47,6 @@ def signup_view(request):
         return Response(response)
 def client_signup(request):
     return redirect('http://localhost:8501')
-@api_view(['GET'])
-def client_isLoggedIn(request,slug):
-    try:
-        get_user = User.objects.get(username=slug)
-        token,obj=Token.objects.get_or_create(user=get_user)
-    except ObjectDoesNotExist:
-        return Response({"token":"user does not exist"})
-    return Response({"token":token.key})
 
 @api_view(['GET'])
 @authentication_classes([TokenAuthentication])
