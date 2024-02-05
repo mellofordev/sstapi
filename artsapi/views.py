@@ -26,7 +26,7 @@ def programs_api(request,slug):
         get_programs = Program.objects.filter(program_comes_under=slug)
     program_bucket=[]
     for program in get_programs:
-        serializer=ProgramSerializer(program)
+        serializer=ProgramSerializer(program,context={"request":request})
         program_bucket.append(serializer.data)
     return Response({"data":program_bucket})
 

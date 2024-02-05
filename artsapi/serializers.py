@@ -4,6 +4,7 @@ from django.core.exceptions import ObjectDoesNotExist
 class ProgramSerializer(serializers.ModelSerializer):
     registered_users=serializers.SerializerMethodField()
     winners=serializers.SerializerMethodField()
+    is_registered=serializers.SerializerMethodField()
     class Meta:
         model=Program
         fields=['id',
@@ -12,7 +13,8 @@ class ProgramSerializer(serializers.ModelSerializer):
                 'program_comes_under',
                 'slot_time',
                 'registered_users',
-                'winners'
+                'winners',
+                'is_registered'
                 ]
     def profileJsonSerializer(self,program):
         profile_bucket=[]
@@ -27,6 +29,12 @@ class ProgramSerializer(serializers.ModelSerializer):
 
         program = Program.objects.get(name=obj)
         return self.profileJsonSerializer(program)
+    def get_is_registered(self,obj):
+        program = Program.objects.get(name=obj)
+        if program in self.context["request"].user.profile.registered_events.all():
+            return True
+        else:
+            return False
 class DepartmentSerializer(serializers.ModelSerializer):
     class Meta:
         model=DepartmentPoints
