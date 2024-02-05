@@ -31,9 +31,12 @@ class ProgramSerializer(serializers.ModelSerializer):
         return self.profileJsonSerializer(program)
     def get_is_registered(self,obj):
         program = Program.objects.get(name=obj)
-        if program in self.context["request"].user.profile.registered_events.all():
-            return True
-        else:
+        try:
+            if program in self.context["request"].user.profile.registered_events.all():
+                return True
+            else:
+                return False
+        except AttributeError:
             return False
 class DepartmentSerializer(serializers.ModelSerializer):
     class Meta:
