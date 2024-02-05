@@ -19,7 +19,7 @@ def signup_view(request):
                 get_user_ = User.objects.get(username=request.data['username'])
                 print(get_user_)
                 token,obj=Token.objects.get_or_create(user=get_user_)
-                return Response({"isLoggedIn":True,"token":token.key})
+                return Response({"token":token.key})
             except ObjectDoesNotExist:   
                 user=User(
                 username=request.data['username'],
@@ -28,7 +28,6 @@ def signup_view(request):
                 password =request.data['password']
                 user.set_password(password)
                 user.save()
-                response['status']='User registered successfully'
                 get_user=User.objects.get(username=request.data['username'])
                 print(get_user)
                 get_user.profile.name = request.data['name']
