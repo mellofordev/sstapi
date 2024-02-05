@@ -17,10 +17,13 @@ def test_programs_api(request): #test view for reference
 
 @api_view(['GET'])
 @authentication_classes([TokenAuthentication])
-def programs_api(request):
+def programs_api(request,slug):
     if request.user.is_anonymous:
         return Response({'error':'Token not provided'})
-    get_programs = Program.objects.all()
+    if slug=="all":
+        get_programs = Program.objects.all()
+    else:    
+        get_programs = Program.objects.filter(program_comes_under=slug)
     program_bucket=[]
     for program in get_programs:
         serializer=ProgramSerializer(program)
