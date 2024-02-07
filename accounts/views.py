@@ -35,7 +35,11 @@ def signup_view(request):
                     get_user.profile.gender='m'
                 else:
                     get_user.profile.gender='f'
-                get_user.profile.department=request.data['department_id'][5:7]
+                get_user_department=request.data['department_id'][5:7]
+                if( get_user_department=="ME" or get_user_department=="EC" ):
+                    get_user.profile.department='default'
+                else:
+                    get_user.profile.department=request.data['department_id'][5:7]
                 get_user.profile.year=4-int(request.data['department_id'][4:5])
                 get_user.profile.chest_number=get_user.id
                 get_user.save()
@@ -60,3 +64,22 @@ def profile_api(request):
     except ObjectDoesNotExist:
         return Response({"error":"Token not provided"})
     return Response({"data":serializer.data})
+
+@api_view(['POST'])
+@authentication_classes([TokenAuthentication])
+def profile_department_set_api(request,slug):
+    get_user=request.user 
+    if get_user.is_anonymous:
+        return Response({'error':'Token not provided'})
+    try:
+        profile = get_user.profile
+        if profile.department=='default':
+            profile.department=slug
+            print(slug)
+            profile.save()
+            return Response({'data':'updated'})
+        else:
+            return Response({'data':"Cannot set department for this user"})
+    except ObjectDoesNotExist:
+        return Response({'error':'User doest not exists'})
+    
