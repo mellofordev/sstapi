@@ -147,8 +147,10 @@ def delete_program_api(request,slug):
     try:
         program=Program.objects.get(id=slug)
         profile=get_user.profile
-        program.registered_users.remove(profile.id)
+        
+        print(profile,program.registered_users.all())
         if program.program_type=='s' and profile in program.registered_users.all():
+            program.registered_users.remove(profile.id)
             profile.registered_events.remove(program.id)
             profile.solo_event_registered_count-=1
             profile.save()
