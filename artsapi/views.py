@@ -5,7 +5,7 @@ from rest_framework.authentication import TokenAuthentication
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import IntegrityError
 from .models import Program,DepartmentPoints,Team
-from .serializers import ProgramSerializer,DepartmentSerializer,ProgramRegisterSerializer
+from .serializers import ProgramSerializer,DepartmentSerializer,TeamSerializers
 # Create your views here.
 
 @api_view(['GET'])
@@ -111,7 +111,7 @@ def join_team(request,slug):
             ):
 
             if(team.team_lead.profile.department==get_user.profile.department):
-                if(len(team.members.all())<=program.max_member_limit):
+                if(len(team.members.all())+1<=program.max_member_limit):
                     team.members.add(get_user.profile.id)
                     get_user.profile.registered_events.add(program.id)
                     get_user.profile.group_event_registered_count+=1
@@ -126,3 +126,65 @@ def join_team(request,slug):
             return Response({"data":'Already registered or limit exceeded'})
     except ObjectDoesNotExist:
         return Response({"data":'Program doesnot exits'})
+@api_view(['GET'])
+@authentication_classes([TokenAuthentication])
+def get_team_members_api(request,slug):
+    if request.user.is_anonymous:
+        return Response({"error":'Token not provided'})
+    try:
+        team=Team.objects.get(share_link=slug)
+        serializers=TeamSerializers(team)
+        return Response({"data":serializers.data})
+    except ObjectDoesNotExist:
+        return Response({"data":'Team does not exits'})
+
+@api_view(['DELETE'])
+@authentication_classes([TokenAuthentication])
+def delete_program_api(request,slug):
+    get_user = request.user
+    if get_user.is_anonymous:
+        return Response({"error":'Token not provided'})
+    try:
+        program=Program.objects.get(id=slug)
+        profile=get_user.profile
+        program.registered_users.remove(profile.id)
+        if program.program_type=='s' and profile in program.registered_users.all():
+            profile.registered_events.remove(program.id)
+            profile.solo_event_registered_count-=1
+            profile.save()
+            return Response({"data":'Deleted'})
+        elif program.program_type=='g' :
+            get_teams=Team.objects.filter(program=program)
+            
+            for team in get_teams:
+                print(profile,team.team_lead.profile)
+                if profile in team.members.all():
+                    team.members.remove(profile.id)
+                    profile.registered_events.remove(program.id)
+                    profile.group_event_registered_count-=1
+                    profile.save()
+                    program.registered_users.remove(profile.id)
+                    return Response({"data":'Deleted'})
+                elif profile == team.team_lead.profile:
+                    print("lead",profile)
+                    get_members=team.members.all()
+                    for member in get_members:
+                        program.registered_users.remove(member.id)
+                        member.registered_events.remove(program.id)
+                        member.group_event_registered_count-=1
+                        member.save()
+                    team.delete()
+                    profile.registered_events.remove(program.id)
+                    profile.group_event_registered_count-=1
+                    profile.save()
+                    program.registered_users.remove(profile.id)
+                    return Response({"data":'Deleted'})
+            else:
+                return Response({"data":'You didnt register for this event'})
+            
+        elif profile not in program.registered_users.all():
+            return Response({"data":'You didnt register for this event'})
+    except ObjectDoesNotExist:
+        return Response({'data':'Program doesnot exits'})
+                    
+        

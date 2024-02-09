@@ -4,6 +4,7 @@ class ProfileSerializer(serializers.ModelSerializer):
     username = serializers.SerializerMethodField()
     group_registered_events=serializers.SerializerMethodField()
     solo_registered_events=serializers.SerializerMethodField()
+    
     class Meta:
         model =Profile
         fields=['id','username','name','department',

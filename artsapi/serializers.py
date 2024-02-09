@@ -1,10 +1,11 @@
 from rest_framework import serializers
-from .models import Program,DepartmentPoints
+from .models import Program,DepartmentPoints,Team
 from django.core.exceptions import ObjectDoesNotExist
 class ProgramSerializer(serializers.ModelSerializer):
     registered_users=serializers.SerializerMethodField()
     winners=serializers.SerializerMethodField()
     is_registered=serializers.SerializerMethodField()
+    team_id = serializers.SerializerMethodField()
     class Meta:
         model=Program
         fields=['id',
@@ -14,11 +15,12 @@ class ProgramSerializer(serializers.ModelSerializer):
                 'slot_time',
                 'registered_users',
                 'winners',
-                'is_registered'
+                'is_registered',
+                'team_id'
                 ]
     def profileJsonSerializer(self,program):
         profile_bucket=[]
-        for profile in program.registered_users.all():
+        for profile in program.winners.all():
             profile_bucket.append(profile.name)
         return profile_bucket
     def get_registered_users(self,obj):
@@ -38,6 +40,9 @@ class ProgramSerializer(serializers.ModelSerializer):
                 return False
         except AttributeError:
             return False
+    def get_team_id(self,obj):
+            return None
+        
 class DepartmentSerializer(serializers.ModelSerializer):
     class Meta:
         model=DepartmentPoints
@@ -61,3 +66,21 @@ class ProgramRegisterSerializer(serializers.ModelSerializer):
             return "Registered for program"
         except ObjectDoesNotExist:
             return "Program doesnot exist"
+class TeamSerializers(serializers.ModelSerializer):
+    program=serializers.SerializerMethodField()
+    team_lead=serializers.SerializerMethodField()
+    members = serializers.SerializerMethodField()
+
+    class Meta:
+        model =Team
+        fields=['program','team_lead','members']
+    def get_program(self,obj):
+        return obj.program.name
+    def get_team_lead(self,obj):
+        return obj.team_lead.profile.name
+    def get_members(self,obj):
+        bucket=[]
+        team_members = obj.members.all()
+        for member in team_members:
+            bucket.append(member.name)
+        return bucket

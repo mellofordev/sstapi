@@ -35,12 +35,21 @@ def signup_view(request):
                     get_user.profile.gender='m'
                 else:
                     get_user.profile.gender='f'
-                get_user_department=request.data['department_id'][5:7]
-                if( get_user_department=="ME" or get_user_department=="EC" ):
-                    get_user.profile.department='default'
-                else:
-                    get_user.profile.department=request.data['department_id'][5:7]
-                get_user.profile.year=4-int(request.data['department_id'][4:5])
+                get_user_department=request.data['department_id']
+                if(len(get_user_department)==10):
+                    get_user_department=request.data['department_id'][5:7]
+                    if( get_user_department=="ME" or get_user_department=="EC" ):
+                        get_user.profile.department='default'
+                    else:
+                        get_user.profile.department=request.data['department_id'][5:7]
+                    get_user.profile.year=4-int(request.data['department_id'][4:5])
+                elif(len(get_user_department)==11):
+                    get_user_department=request.data['department_id'][6:8]
+                    if( get_user_department=="ME" or get_user_department=="EC" ):
+                        get_user.profile.department='default'
+                    else:
+                        get_user.profile.department=request.data['department_id'][5:7]
+                    get_user.profile.year=4-int(request.data['department_id'][5:6])
                 get_user.profile.chest_number=get_user.id
                 get_user.save()
                 token,obj=Token.objects.get_or_create(user=get_user)
