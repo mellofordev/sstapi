@@ -5,6 +5,8 @@ from rest_framework.authtoken.models import Token
 from rest_framework.authentication import TokenAuthentication
 from django.shortcuts import redirect
 from django.core.exceptions import ObjectDoesNotExist
+from django.http import HttpResponse
+from openpyxl import Workbook
 from .models import Profile
 from .serializers import ProfileSerializer
 # Create your views here.
@@ -91,4 +93,24 @@ def profile_department_set_api(request,slug):
             return Response({'data':"Cannot set department for this user"})
     except ObjectDoesNotExist:
         return Response({'error':'User doest not exists'})
+
+def export_data(request):
+    response = HttpResponse(content_type='application/ms-excel')
+    response['Content-Disposition'] = 'attachment; filename="class_filtered_users.xlsx"'
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Profile"
+
+    headers = ["lead_name", "department", "program", "members"]
+    ws.append(headers)
+
+    profiles = Profile.objects.filter(department='BT')
+    for profile in profiles:
+        if len(profile.registered_events.all())!=0:
+            registered_events = ', '.join([event.name for event in profile.registered_events.all()])
+            ws.append([profile.name, profile.department, registered_events, len(profile.registered_events.all())])
+
+    wb.save(response)
+    return response
     

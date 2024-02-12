@@ -41,7 +41,8 @@ INSTALLED_APPS = [
     'artsapi',
     'rest_framework',
     'rest_framework.authtoken',
-    'corsheaders'
+    'corsheaders',
+    'openpyxl'
 ]
 
 MIDDLEWARE = [
