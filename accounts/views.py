@@ -8,7 +8,9 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponse
 from openpyxl import Workbook
 from .models import Profile
+from artsapi.models import Team
 from .serializers import ProfileSerializer
+
 # Create your views here.
 @api_view(['POST'])
 def signup_view(request):
@@ -96,7 +98,7 @@ def profile_department_set_api(request,slug):
 
 def export_data(request):
     response = HttpResponse(content_type='application/ms-excel')
-    response['Content-Disposition'] = 'attachment; filename="class_filtered_users.xlsx"'
+    response['Content-Disposition'] = 'attachment; filename="am_filtered_users.xlsx"'
 
     wb = Workbook()
     ws = wb.active
@@ -105,7 +107,7 @@ def export_data(request):
     headers = ["lead_name", "department", "program", "members"]
     ws.append(headers)
 
-    profiles = Profile.objects.filter(department='BT')
+    profiles = Profile.objects.filter(department='AM')
     for profile in profiles:
         if len(profile.registered_events.all())!=0:
             registered_events = ', '.join([event.name for event in profile.registered_events.all()])
@@ -114,3 +116,24 @@ def export_data(request):
     wb.save(response)
     return response
     
+def export_team_data(request):
+    response = HttpResponse(content_type='application/ms-excel')
+    response['Content-Disposition'] = 'attachment; filename="am_filtered_group_users.xlsx"'
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Profile"
+
+    headers = ["lead_name", "department", "program", "members"]
+    ws.append(headers)
+
+    teams=Team.objects.all()
+    for team in teams:
+        if len(team.members.all())!=0 and team.team_lead.profile.department=='AM':
+            members = ', '.join([profile.name for profile in team.members.all()])
+            ws.append([team.team_lead.profile.name, team.team_lead.profile.department,
+                        team.program.name,members
+                       
+                       ])
+    wb.save(response)
+    return response
