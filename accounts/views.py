@@ -8,7 +8,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponse
 from openpyxl import Workbook
 from .models import Profile
-from artsapi.models import Team
+from artsapi.models import Team,Program
 from .serializers import ProfileSerializer
 
 # Create your views here.
@@ -135,5 +135,40 @@ def export_team_data(request):
                         team.program.name,members
                        
                        ])
+    wb.save(response)
+    return response
+def export_program_data(request):
+    program = Program.objects.get(name='program')
+    response = HttpResponse(content_type='application/ms-excel')
+    response['Content-Disposition'] = f'attachment; filename="{program.name}_registered_users_sheet.xlsx"'
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Program"
+
+    headers = ["program_name", "registered_user_name", "chest_number","department"]  
+    ws.append(headers)
+
+    for profile in program.registered_users.all():
+        ws.append([program.name, profile.name, profile.chest_number,profile.department])  
+
+    wb.save(response)
+    return response
+def export_team_program_data(request):
+    program = Program.objects.get(name='team')
+    teams = Team.objects.all()
+    response = HttpResponse(content_type='application/ms-excel')
+    response['Content-Disposition'] = f'attachment; filename="{program.name}_registered_users_sheet.xlsx"'
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Team-Events"
+
+    headers = ["program_name", "registered_team_lead", "chest_number","department"]  
+    ws.append(headers)
+
+    for profile in program.registered_users.all():
+        for team in teams:
+            if team.team_lead.profile.chest_number == profile.chest_number and team.program.name==program.name:
+                ws.append([program.name, profile.name, profile.chest_number,team.team_lead.profile.department])  
+
     wb.save(response)
     return response

@@ -6,6 +6,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.db import IntegrityError
 from .models import Program,DepartmentPoints,Team
 from .serializers import ProgramSerializer,DepartmentSerializer,TeamSerializers
+from django.utils import timezone
 # Create your views here.
 
 @api_view(['GET'])
@@ -188,5 +189,13 @@ def delete_program_api(request,slug):
             return Response({"data":'You didnt register for this event'})
     except ObjectDoesNotExist:
         return Response({'data':'Program doesnot exits'})
-                    
-        
+@api_view(['GET'])                    
+def live_programs_api(request):
+    today = timezone.now().date()
+    get_programs = Program.objects.filter(slot_time__date=today)
+    response_bucket=[]
+    for program in get_programs:
+        serialzier = ProgramSerializer(program,context={"request":None})
+        response_bucket.append(serialzier.data)
+    return Response({'data':response_bucket})
+    

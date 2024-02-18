@@ -1,9 +1,12 @@
 from rest_framework import serializers
 from .models import Program,DepartmentPoints,Team
+from accounts.models import Profile
 from django.core.exceptions import ObjectDoesNotExist
 class ProgramSerializer(serializers.ModelSerializer):
     registered_users=serializers.SerializerMethodField()
-    winners=serializers.SerializerMethodField()
+    first=serializers.SerializerMethodField()
+    second=serializers.SerializerMethodField()
+    third=serializers.SerializerMethodField()
     is_registered=serializers.SerializerMethodField()
     team_id = serializers.SerializerMethodField()
     class Meta:
@@ -14,7 +17,9 @@ class ProgramSerializer(serializers.ModelSerializer):
                 'program_comes_under',
                 'slot_time',
                 'registered_users',
-                'winners',
+                'first',
+                'second',
+                'third',
                 'is_registered',
                 'team_id'
                 ]
@@ -24,13 +29,25 @@ class ProgramSerializer(serializers.ModelSerializer):
             profile_bucket.append(profile.name)
         return profile_bucket
     def get_registered_users(self,obj):
-
+        registered_bucket=[]
         program = Program.objects.get(name=obj)
-        return self.profileJsonSerializer(program)
-    def get_winners(self,obj):
-
-        program = Program.objects.get(name=obj)
-        return self.profileJsonSerializer(program)
+        for profile in program.registered_users.all():
+            registered_bucket.append(profile.name)
+        return registered_bucket
+    def resultJsonSerializer(self,position):
+        result_bucket=[]
+        for winner in position:
+            result_bucket.append(winner.name)
+        return result_bucket
+    def get_first(self,obj):
+        first = obj.winner_first.all()
+        return self.resultJsonSerializer(first)
+    def get_second(self,obj):
+        second =obj.winner_second.all()
+        return self.resultJsonSerializer(second)
+    def get_third(self,obj):
+        third =obj.winner_third.all()
+        return self.resultJsonSerializer(third)
     def get_is_registered(self,obj):
         program = Program.objects.get(name=obj)
         try:

@@ -1,7 +1,7 @@
 from django.db import models
 from django.utils import timezone
 from django.contrib.auth.models import User
-from accounts.models import departments
+from accounts.models import departments,Profile
 # Create your models here.
 program_genders=(('m','Male'),
                  ('f','Female'),
@@ -31,24 +31,46 @@ class Program(models.Model):
     program_type = models.CharField(max_length=5,choices=program_types,default='g')
     program_comes_under = models.CharField(max_length=80,choices=program_main_list,default='music')
     registered_users=models.ManyToManyField('accounts.Profile',related_name='registered_user',blank=True)
-    winners = models.ManyToManyField('accounts.Profile', related_name='won_programs', blank=True)
-    winners_position=models.ManyToManyField('accounts.Profile',related_name='winner_ranking',blank=True)
+    winner_first = models.ManyToManyField('accounts.Profile',related_name='first',blank=True)
+    winner_second = models.ManyToManyField('accounts.Profile',related_name='second',blank=True)
+    winner_third = models.ManyToManyField('accounts.Profile',related_name='third',blank=True)
     max_member_limit=models.IntegerField(default=1)
     def __str__(self) -> str:
         return self.name 
     
     def update_score(self):
+        first = self.winner_first.all()
+        second = self.winner_second.all()
+        third = self.winner_third.all()
 
-        for winner in self.winners.all():
-            department = winner.department
-            points_table, created = DepartmentPoints.objects.get_or_create(department=department)
+        if first:
+            for winner in first:
+                department = winner.department
+                points_table, created = DepartmentPoints.objects.get_or_create(department=department)
+                if self.program_type == 's':
+                    points_table.solo_event_score += 5
+                elif self.program_type == 'g':
+                    points_table.group_event_score += 10
+                points_table.save()
+        if second:
+            for winner in second:
+                department = winner.department
+                points_table, created = DepartmentPoints.objects.get_or_create(department=department)
+                if self.program_type == 's':
+                    points_table.solo_event_score += 3
+                elif self.program_type == 'g':
+                    points_table.group_event_score += 6
+                points_table.save()
+        if third:
+            for winner in third:
+                department = winner.department
+                points_table, created = DepartmentPoints.objects.get_or_create(department=department)
+                if self.program_type == 's':
+                    points_table.solo_event_score += 1
+                elif self.program_type == 'g':
+                    points_table.group_event_score += 3
+                points_table.save()
 
-            if self.program_type == 's':
-                points_table.solo_event_score += 3
-            elif self.program_type == 'g':
-                points_table.group_event_score += 5
-
-            points_table.save()
 class Team(models.Model):
     team_lead = models.OneToOneField(User,related_name='team_lead',on_delete=models.CASCADE)
     members=models.ManyToManyField('accounts.Profile',related_name='members',blank=True)
