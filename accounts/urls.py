@@ -11,5 +11,7 @@ urlpatterns = [
     path('export/profile',accounts_views.export_data),
     path('export/team',accounts_views.export_team_data),
     path('export/program',accounts_views.export_program_data),
-    path('export/program/team',accounts_views.export_team_program_data)
+    path('export/program/team',accounts_views.export_team_program_data),
+    path('export/winner/individual',accounts_views.export_individual_results),
+    path('export/winner/team',accounts_views.export_group_results),
 ]

@@ -172,3 +172,44 @@ def export_team_program_data(request):
 
     wb.save(response)
     return response
+
+def export_individual_results(request):
+    programs = Program.objects.filter(program_type='s')
+    response = HttpResponse(content_type='application/ms-excel')
+    response['Content-Disposition'] = 'attachment; filename="individual_results.xlsx"'
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Individual-Results"
+
+    headers = ["Program Name", "Winner Type", "Name", "Chest Number", "Department"]
+    ws.append(headers)
+
+    for program in programs:
+        for winner_type, winner_set in [('First', program.winner_first.all()), ('Second', program.winner_second.all()), ('Third', program.winner_third.all())]:
+            for winner in winner_set:
+                ws.append([program.name, winner_type, winner.name, winner.chest_number, winner.department])
+
+    wb.save(response)
+    return response
+
+def export_group_results(request):
+    programs = Program.objects.filter(program_type='g')
+    response = HttpResponse(content_type='application/ms-excel')
+    response['Content-Disposition'] = 'attachment; filename="group_results.xlsx"'
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Group-Results"
+
+    headers = ["Program Name", "Team Lead", "Team Members", "Department"]
+    ws.append(headers)
+
+    for program in programs:
+        teams = Team.objects.filter(program=program)
+        for team in teams:
+            team_members = ', '.join([member.name for member in team.members.all()])
+            ws.append([program.name, team.team_lead.profile.name, team_members, team.team_lead.profile.department])
+
+    wb.save(response)
+    return response
