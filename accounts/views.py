@@ -213,3 +213,40 @@ def export_group_results(request):
 
     wb.save(response)
     return response
+def export_team_winners(request):
+    programs = Program.objects.filter(program_type='g')
+    response = HttpResponse(content_type='application/ms-excel')
+    response['Content-Disposition'] = 'attachment; filename="team_winners.xlsx"'
+    
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Team Winners"
+    
+    headers = ["Program Name", "Winner Type", "Team Lead", "Team Lead Chest Number", "Department", "Member Names", "Member Chest Numbers"]
+    ws.append(headers)
+    
+    for program in programs:
+        for winner_type, winner_set in [('First', program.winner_first.all()), 
+                                        ('Second', program.winner_second.all()), 
+                                        ('Third', program.winner_third.all())]:
+            for winner in winner_set:
+                try:
+                    team = Team.objects.get(team_lead__profile=winner, program=program)
+                    member_names = ", ".join([member.name for member in team.members.all()])
+                    member_chest_numbers = ", ".join([member.chest_number for member in team.members.all()])
+                    
+                    ws.append([
+                        program.name,
+                        winner_type,
+                        winner.name,
+                        winner.chest_number,
+                        winner.department,
+                        member_names,
+                        member_chest_numbers
+                    ])
+                except Team.DoesNotExist:
+                    # If no team is found, we'll skip this winner
+                    continue
+    
+    wb.save(response)
+    return response
